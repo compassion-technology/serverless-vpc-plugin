@@ -1,7 +1,7 @@
 {
   "name": "sls-vpc-example",
   "private": true,
-  "description": "Example project for serverless-vpc-plugin2",
+  "description": "Example project for @compassion-technology/serverless-vpc-plugin",
   "author": "Smoke Turner, LLC <github@smoketurner.com>",
   "license": "MIT",
   "repository": {
