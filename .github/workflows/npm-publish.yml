@@ -23,12 +23,8 @@ jobs:
           registry-url: https://npm.pkg.github.com/
       - name: Run npm install
         run: npm ci
-        env:
-          GH_PACKAGES_NPM_TOKEN: ${{secrets.GH_PACKAGES_NPM_TOKEN}}
       - name: Run npm test
         run: npm test
-        env:
-          GH_PACKAGES_NPM_TOKEN: ${{secrets.GH_PACKAGES_NPM_TOKEN}}
 
   publish-gpr:
     needs: build
@@ -41,11 +37,5 @@ jobs:
           registry-url: https://npm.pkg.github.com/
       - name: Run npm install
         run: npm ci
-        env:
-          GH_PACKAGES_NPM_TOKEN: ${{secrets.GH_PACKAGES_NPM_TOKEN}}
       - run: npm run build
-        env:
-          GH_PACKAGES_NPM_TOKEN: ${{secrets.GH_PACKAGES_NPM_TOKEN}}
       - run: npm publish --access public
-        env:
-          GH_PACKAGES_NPM_TOKEN: ${{secrets.GH_PACKAGES_NPM_TOKEN}}

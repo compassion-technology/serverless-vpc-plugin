@@ -26,9 +26,5 @@ jobs:
           registry-url: https://npm.pkg.github.com/
       - name: Run npm install
         run: npm ci
-        env:
-          GH_PACKAGES_NPM_TOKEN: ${{secrets.GH_PACKAGES_NPM_TOKEN}}
       - name: Run npm test
         run: npm test
-        env:
-          GH_PACKAGES_NPM_TOKEN: ${{secrets.GH_PACKAGES_NPM_TOKEN}}
