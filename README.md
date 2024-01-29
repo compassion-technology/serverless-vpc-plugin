@@ -1,4 +1,4 @@
-# serverless-vpc-plugin
+# @compassion-technology/serverless-vpc-plugin
 
 [![serverless](http://public.serverless.com/badges/v3.svg)](http://www.serverless.com)
 [![npm version](https://badge.fury.io/js/serverless-vpc-plugin.svg)](https://badge.fury.io/js/serverless-vpc-plugin)

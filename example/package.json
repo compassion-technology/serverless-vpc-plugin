@@ -1,12 +1,12 @@
 {
   "name": "sls-vpc-example",
   "private": true,
-  "description": "Example project for serverless-vpc-plugin",
+  "description": "Example project for @compassion-technology/serverless-vpc-plugin",
   "author": "Smoke Turner, LLC <github@smoketurner.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/smoketurner/serverless-vpc-plugin"
+    "url": "https://github.com/compassion-technology/serverless-vpc-plugin"
   },
   "main": "index.js",
   "scripts": {
@@ -18,7 +18,7 @@
   "devDependencies": {
     "aws-sdk": "2.1520.0",
     "serverless": "3.38.0",
-    "serverless-vpc-plugin": "smoketurner/serverless-vpc-plugin#master",
+    "serverless-vpc-plugin": "compassion-technology/serverless-vpc-plugin#master",
     "serverless-webpack": "5.13.0",
     "webpack": "5.89.0",
     "webpack-node-externals": "3.0.0"
