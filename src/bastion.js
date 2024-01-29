@@ -130,44 +130,44 @@ function buildBastionLaunchConfiguration(
           // eslint-disable-next-line no-template-curly-in-string
           'Fn::Sub': '${AWS::StackName}-bastion',
         },
-      },
-      LaunchTemplateData: {
-        IamInstanceProfile: {
-          Arn: {
-            'Fn::GetAtt': ['BastionInstanceProfile', 'Arn'],
-          },
-          ImageId: {
-            Ref: 'LatestAmiId',
-          },
-          InstanceType: 't2.micro',
-          SecurityGroups: [
-            {
-              Ref: 'BastionSecurityGroup',
+        LaunchTemplateData: {
+          IamInstanceProfile: {
+            Arn: {
+              'Fn::GetAtt': ['BastionInstanceProfile', 'Arn'],
             },
-          ],
-          KeyName: keyPairName,
-          NetworkInterfaces: [
-            {
-              AssociatePublicIpAddress: true,
-              DeviceIndex: 0,
-              Groups: [
-                {
-                  Ref: 'BastionSecurityGroup',
-                },
-              ],
-              DeleteOnTermination: true,
+            ImageId: {
+              Ref: 'LatestAmiId',
             },
-          ],
-          BlockDeviceMappings: [
-            {
-              DeviceName: '/dev/xvda',
-              Ebs: {
-                VolumeSize: 10,
-                VolumeType: 'gp3',
+            InstanceType: 't2.micro',
+            SecurityGroups: [
+              {
+                Ref: 'BastionSecurityGroup',
+              },
+            ],
+            KeyName: keyPairName,
+            NetworkInterfaces: [
+              {
+                AssociatePublicIpAddress: true,
+                DeviceIndex: 0,
+                Groups: [
+                  {
+                    Ref: 'BastionSecurityGroup',
+                  },
+                ],
                 DeleteOnTermination: true,
               },
-            },
-          ],
+            ],
+            BlockDeviceMappings: [
+              {
+                DeviceName: '/dev/xvda',
+                Ebs: {
+                  VolumeSize: 10,
+                  VolumeType: 'gp3',
+                  DeleteOnTermination: true,
+                },
+              },
+            ],
+          },
         },
 
         // On-Demand price of t2.micro in us-east-1 (https://aws.amazon.com/ec2/pricing/on-demand/)
