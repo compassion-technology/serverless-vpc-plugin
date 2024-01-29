@@ -135,68 +135,65 @@ function buildBastionLaunchConfiguration(
             Arn: {
               'Fn::GetAtt': ['BastionInstanceProfile', 'Arn'],
             },
-            ImageId: {
-              Ref: 'LatestAmiId',
+          },
+          ImageId: {
+            Ref: 'LatestAmiId',
+          },
+          InstanceType: 't2.micro',
+          SecurityGroups: [
+            {
+              Ref: 'BastionSecurityGroup',
             },
-            InstanceType: 't2.micro',
-            SecurityGroups: [
-              {
-                Ref: 'BastionSecurityGroup',
-              },
-            ],
-            KeyName: keyPairName,
-            NetworkInterfaces: [
-              {
-                AssociatePublicIpAddress: true,
-                DeviceIndex: 0,
-                Groups: [
-                  {
-                    Ref: 'BastionSecurityGroup',
-                  },
-                ],
+          ],
+          KeyName: keyPairName,
+          NetworkInterfaces: [
+            {
+              AssociatePublicIpAddress: true,
+              DeviceIndex: 0,
+              Groups: [
+                {
+                  Ref: 'BastionSecurityGroup',
+                },
+              ],
+              DeleteOnTermination: true,
+            },
+          ],
+          BlockDeviceMappings: [
+            {
+              DeviceName: '/dev/xvda',
+              Ebs: {
+                VolumeSize: 10,
+                VolumeType: 'gp3',
                 DeleteOnTermination: true,
               },
-            ],
-            BlockDeviceMappings: [
-              {
-                DeviceName: '/dev/xvda',
-                Ebs: {
-                  VolumeSize: 10,
-                  VolumeType: 'gp3',
-                  DeleteOnTermination: true,
-                },
-              },
-            ],
-          },
-        },
-
-        // On-Demand price of t2.micro in us-east-1 (https://aws.amazon.com/ec2/pricing/on-demand/)
-        SpotPrice: '0.0116',
-        // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-helper-scripts-reference.html
-        UserData: {
-          'Fn::Base64': {
-            'Fn::Join': [
-              '',
-              [
-                '#!/bin/bash -xe\n',
-                '/usr/bin/yum update -y\n',
-                '/usr/bin/yum install -y aws-cfn-bootstrap\n',
-                'EIP_ALLOCATION_ID=',
-                { 'Fn::GetAtt': ['BastionEIP', 'AllocationId'] },
-                '\n',
-                'INSTANCE_ID=`/usr/bin/curl -sq http://169.254.169.254/latest/meta-data/instance-id`\n',
-                // eslint-disable-next-line no-template-curly-in-string
-                '/usr/bin/aws ec2 associate-address --instance-id ${INSTANCE_ID} --allocation-id ${EIP_ALLOCATION_ID} --region ',
-                { Ref: 'AWS::Region' },
-                '\n',
-                '/opt/aws/bin/cfn-signal --exit-code 0 --stack ',
-                { Ref: 'AWS::StackName' },
-                ' --resource BastionAutoScalingGroup ',
-                ' --region ',
-                { Ref: 'AWS::Region' },
-                '\n',
+            },
+          ],
+          // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-helper-scripts-reference.html
+          UserData: {
+            'Fn::Base64': {
+              'Fn::Join': [
+                '',
+                [
+                  '#!/bin/bash -xe\n',
+                  '/usr/bin/yum update -y\n',
+                  '/usr/bin/yum install -y aws-cfn-bootstrap\n',
+                  'EIP_ALLOCATION_ID=',
+                  { 'Fn::GetAtt': ['BastionEIP', 'AllocationId'] },
+                  '\n',
+                  'INSTANCE_ID=`/usr/bin/curl -sq http://169.254.169.254/latest/meta-data/instance-id`\n',
+                  // eslint-disable-next-line no-template-curly-in-string
+                  '/usr/bin/aws ec2 associate-address --instance-id ${INSTANCE_ID} --allocation-id ${EIP_ALLOCATION_ID} --region ',
+                  { Ref: 'AWS::Region' },
+                  '\n',
+                  '/opt/aws/bin/cfn-signal --exit-code 0 --stack ',
+                  { Ref: 'AWS::StackName' },
+                  ' --resource BastionAutoScalingGroup ',
+                  ' --region ',
+                  { Ref: 'AWS::Region' },
+                  '\n',
+                ],
               ],
-            ],
+            },
           },
         },
       },
