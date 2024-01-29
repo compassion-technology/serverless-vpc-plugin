@@ -228,8 +228,13 @@ function buildBastionAutoScalingGroup(numZones = 0, { name = 'BastionAutoScaling
         },
       },
       Properties: {
-        LaunchConfigurationName: {
-          Ref: 'BastionLaunchConfiguration',
+        LaunchTemplate: {
+          LaunchTemplateId: {
+            Ref: 'BastionLaunchConfiguration',
+          },
+          Version: {
+            'Fn::GetAtt': ['BastionLaunchConfiguration', 'LatestVersionNumber'],
+          },
         },
         VPCZoneIdentifier: zones,
         MinSize: 1,
