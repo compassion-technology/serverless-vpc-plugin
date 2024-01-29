@@ -1,6 +1,6 @@
 {
   "name": "@compassion-technology/serverless-vpc-plugin",
-  "version": "1.0.7-beta10",
+  "version": "1.0.7-beta11",
   "engines": {
     "node": ">=12.0"
   },
