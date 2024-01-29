@@ -140,11 +140,6 @@ function buildBastionLaunchTemplate(keyPairName, { name = 'BastionLaunchTemplate
             Ref: 'LatestAmiId',
           },
           InstanceType: 't2.micro',
-          SecurityGroups: [
-            {
-              Ref: 'BastionSecurityGroup',
-            },
-          ],
           KeyName: keyPairName,
           NetworkInterfaces: [
             {
