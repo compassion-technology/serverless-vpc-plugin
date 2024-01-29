@@ -124,33 +124,52 @@ function buildBastionLaunchConfiguration(
 ) {
   return {
     [name]: {
-      Type: 'AWS::AutoScaling::LaunchConfiguration',
+      Type: 'AWS::EC2::LaunchTemplate',
       Properties: {
-        AssociatePublicIpAddress: true,
-        BlockDeviceMappings: [
-          {
-            DeviceName: '/dev/xvda',
-            Ebs: {
-              VolumeSize: 10,
-              VolumeType: 'gp3',
+        LaunchTemplateName: {
+          // eslint-disable-next-line no-template-curly-in-string
+          'Fn::Sub': '${AWS::StackName}-bastion',
+        },
+      },
+      LaunchTemplateData: {
+        IamInstanceProfile: {
+          Arn: {
+            'Fn::GetAtt': ['BastionInstanceProfile', 'Arn'],
+          },
+          ImageId: {
+            Ref: 'LatestAmiId',
+          },
+          InstanceType: 't2.micro',
+          SecurityGroups: [
+            {
+              Ref: 'BastionSecurityGroup',
+            },
+          ],
+          KeyName: keyPairName,
+          NetworkInterfaces: [
+            {
+              AssociatePublicIpAddress: true,
+              DeviceIndex: 0,
+              Groups: [
+                {
+                  Ref: 'BastionSecurityGroup',
+                },
+              ],
               DeleteOnTermination: true,
             },
-          },
-        ],
-        KeyName: keyPairName,
-        ImageId: {
-          Ref: 'LatestAmiId',
+          ],
+          BlockDeviceMappings: [
+            {
+              DeviceName: '/dev/xvda',
+              Ebs: {
+                VolumeSize: 10,
+                VolumeType: 'gp3',
+                DeleteOnTermination: true,
+              },
+            },
+          ],
         },
-        InstanceMonitoring: false,
-        IamInstanceProfile: {
-          Ref: 'BastionInstanceProfile',
-        },
-        InstanceType: 't2.micro',
-        SecurityGroups: [
-          {
-            Ref: 'BastionSecurityGroup',
-          },
-        ],
+
         // On-Demand price of t2.micro in us-east-1 (https://aws.amazon.com/ec2/pricing/on-demand/)
         SpotPrice: '0.0116',
         // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-helper-scripts-reference.html
