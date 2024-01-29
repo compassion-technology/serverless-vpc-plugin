@@ -122,6 +122,7 @@ function buildBastionLaunchConfiguration(
   keyPairName,
   { name = 'BastionLaunchConfiguration' } = {},
 ) {
+  console.log('using name for BastionLaunchConfiguration', name);
   return {
     [name]: {
       Type: 'AWS::EC2::LaunchTemplate',
