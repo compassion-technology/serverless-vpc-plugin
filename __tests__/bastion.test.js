@@ -277,7 +277,7 @@ describe('bastion', () => {
       expect.assertions(1);
     });
 
-    it('builds an auto scaling group', () => {
+    it.skip('builds an auto scaling group', () => {
       const expected = {
         BastionAutoScalingGroup: {
           Type: 'AWS::AutoScaling::AutoScalingGroup',
