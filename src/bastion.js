@@ -112,17 +112,16 @@ function buildBastionInstanceProfile({ name = 'BastionInstanceProfile' } = {}) {
 }
 
 /**
- * Build the auto-scaling group launch configuration for the bastion host
+ * Build the auto-scaling group launch template for the bastion host
  *
  * @param {String} keyPairName Existing key pair name
  * @param {Object} params
  * @return {Object}
  */
-function buildBastionLaunchConfiguration(
-  keyPairName,
-  { name = 'BastionLaunchConfiguration' } = {},
-) {
-  console.log('using name for BastionLaunchConfiguration', name);
+function buildBastionLaunchTemplate(keyPairName, { name = 'BastionLaunchTemplate' } = {}) {
+  // print function args out
+  console.log('using keyPairName for BastionLaunchTemplate', keyPairName);
+  console.log('using name for BastionLaunchTemplate', name);
   return {
     [name]: {
       Type: 'AWS::EC2::LaunchTemplate',
@@ -231,10 +230,10 @@ function buildBastionAutoScalingGroup(numZones = 0, { name = 'BastionAutoScaling
       Properties: {
         LaunchTemplate: {
           LaunchTemplateId: {
-            Ref: 'BastionLaunchConfiguration',
+            Ref: 'BastionLaunchTemplate',
           },
           Version: {
-            'Fn::GetAtt': ['BastionLaunchConfiguration', 'LatestVersionNumber'],
+            'Fn::GetAtt': ['BastionLaunchTemplate', 'LatestVersionNumber'],
           },
         },
         VPCZoneIdentifier: zones,
@@ -329,7 +328,7 @@ async function buildBastion(keyPairName, numZones = 0) {
     ...buildBastionIamRole(),
     ...buildBastionInstanceProfile(),
     ...buildBastionSecurityGroup(publicIp),
-    ...buildBastionLaunchConfiguration(keyPairName),
+    ...buildBastionLaunchTemplate(keyPairName),
     ...buildBastionAutoScalingGroup(numZones),
   };
 }
@@ -341,6 +340,6 @@ module.exports = {
   buildBastionEIP,
   buildBastionIamRole,
   buildBastionInstanceProfile,
-  buildBastionLaunchConfiguration,
+  buildBastionLaunchTemplate,
   buildBastionSecurityGroup,
 };
