@@ -120,8 +120,6 @@ function buildBastionInstanceProfile({ name = 'BastionInstanceProfile' } = {}) {
  */
 function buildBastionLaunchTemplate(keyPairName, { name = 'BastionLaunchTemplate' } = {}) {
   // print function args out
-  console.log('using keyPairName for BastionLaunchTemplate', keyPairName);
-  console.log('using name for BastionLaunchTemplate', name);
   return {
     [name]: {
       Type: 'AWS::EC2::LaunchTemplate',
