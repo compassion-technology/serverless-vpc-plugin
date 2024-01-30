@@ -119,7 +119,6 @@ function buildBastionInstanceProfile({ name = 'BastionInstanceProfile' } = {}) {
  * @return {Object}
  */
 function buildBastionLaunchTemplate(keyPairName, { name = 'BastionLaunchTemplate' } = {}) {
-  // print function args out
   return {
     [name]: {
       Type: 'AWS::EC2::LaunchTemplate',
