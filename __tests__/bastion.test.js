@@ -6,7 +6,7 @@ const {
   buildBastionEIP,
   buildBastionIamRole,
   buildBastionInstanceProfile,
-  buildBastionLaunchConfiguration,
+  buildBastionLaunchTemplate,
   buildBastionAutoScalingGroup,
   buildBastionSecurityGroup,
 } = require('../src/bastion');
@@ -203,68 +203,80 @@ describe('bastion', () => {
   });
 
   describe('#buildBastionLaunchConfiguration', () => {
-    it.skip('builds launch configuration', () => {
+    it('builds launch configuration', () => {
       const expected = {
-        BastionLaunchConfiguration: {
-          Type: 'AWS::AutoScaling::LaunchConfiguration',
+        BastionLaunchTemplate: {
+          Type: 'AWS::EC2::LaunchTemplate',
           Properties: {
-            AssociatePublicIpAddress: true,
-            BlockDeviceMappings: [
-              {
-                DeviceName: '/dev/xvda',
-                Ebs: {
-                  VolumeSize: 10,
-                  VolumeType: 'gp3',
-                  DeleteOnTermination: true,
+            LaunchTemplateName: {
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': '${AWS::StackName}-bastion',
+            },
+            LaunchTemplateData: {
+              BlockDeviceMappings: [
+                {
+                  DeviceName: '/dev/xvda',
+                  Ebs: {
+                    VolumeSize: 10,
+                    VolumeType: 'gp3',
+                    DeleteOnTermination: true,
+                  },
+                },
+              ],
+              KeyName: 'MyKey',
+              ImageId: {
+                Ref: 'LatestAmiId',
+              },
+              IamInstanceProfile: {
+                Arn: {
+                  'Fn::GetAtt': ['BastionInstanceProfile', 'Arn'],
                 },
               },
-            ],
-            KeyName: 'MyKey',
-            ImageId: {
-              Ref: 'LatestAmiId',
-            },
-            InstanceMonitoring: false,
-            IamInstanceProfile: {
-              Ref: 'BastionInstanceProfile',
-            },
-            InstanceType: 't2.micro',
-            SecurityGroups: [
-              {
-                Ref: 'BastionSecurityGroup',
-              },
-            ],
-            SpotPrice: '0.0116',
-            UserData: {
-              'Fn::Base64': {
-                'Fn::Join': [
-                  '',
-                  [
-                    '#!/bin/bash -xe\n',
-                    '/usr/bin/yum update -y\n',
-                    '/usr/bin/yum install -y aws-cfn-bootstrap\n',
-                    'EIP_ALLOCATION_ID=',
-                    { 'Fn::GetAtt': ['BastionEIP', 'AllocationId'] },
-                    '\n',
-                    'INSTANCE_ID=`/usr/bin/curl -sq http://169.254.169.254/latest/meta-data/instance-id`\n',
-                    // eslint-disable-next-line no-template-curly-in-string
-                    '/usr/bin/aws ec2 associate-address --instance-id ${INSTANCE_ID} --allocation-id ${EIP_ALLOCATION_ID} --region ',
-                    { Ref: 'AWS::Region' },
-                    '\n',
-                    '/opt/aws/bin/cfn-signal --exit-code 0 --stack ',
-                    { Ref: 'AWS::StackName' },
-                    ' --resource BastionAutoScalingGroup ',
-                    ' --region ',
-                    { Ref: 'AWS::Region' },
-                    '\n',
+              InstanceType: 't2.micro',
+              NetworkInterfaces: [
+                {
+                  AssociatePublicIpAddress: true,
+                  DeviceIndex: 0,
+                  Groups: [
+                    {
+                      Ref: 'BastionSecurityGroup',
+                    },
                   ],
-                ],
+                  DeleteOnTermination: true,
+                },
+              ],
+              UserData: {
+                'Fn::Base64': {
+                  'Fn::Join': [
+                    '',
+                    [
+                      '#!/bin/bash -xe\n',
+                      '/usr/bin/yum update -y\n',
+                      '/usr/bin/yum install -y aws-cfn-bootstrap\n',
+                      'EIP_ALLOCATION_ID=',
+                      { 'Fn::GetAtt': ['BastionEIP', 'AllocationId'] },
+                      '\n',
+                      'INSTANCE_ID=`/usr/bin/curl -sq http://169.254.169.254/latest/meta-data/instance-id`\n',
+                      // eslint-disable-next-line no-template-curly-in-string
+                      '/usr/bin/aws ec2 associate-address --instance-id ${INSTANCE_ID} --allocation-id ${EIP_ALLOCATION_ID} --region ',
+                      { Ref: 'AWS::Region' },
+                      '\n',
+                      '/opt/aws/bin/cfn-signal --exit-code 0 --stack ',
+                      { Ref: 'AWS::StackName' },
+                      ' --resource BastionAutoScalingGroup ',
+                      ' --region ',
+                      { Ref: 'AWS::Region' },
+                      '\n',
+                    ],
+                  ],
+                },
               },
             },
           },
         },
       };
 
-      const actual = buildBastionLaunchConfiguration('MyKey');
+      const actual = buildBastionLaunchTemplate('MyKey');
       expect(actual).toEqual(expected);
       expect.assertions(1);
     });
@@ -277,7 +289,7 @@ describe('bastion', () => {
       expect.assertions(1);
     });
 
-    it.skip('builds an auto scaling group', () => {
+    it('builds an auto scaling group', () => {
       const expected = {
         BastionAutoScalingGroup: {
           Type: 'AWS::AutoScaling::AutoScalingGroup',
@@ -288,8 +300,13 @@ describe('bastion', () => {
             },
           },
           Properties: {
-            LaunchConfigurationName: {
-              Ref: 'BastionLaunchConfiguration',
+            LaunchTemplate: {
+              LaunchTemplateId: {
+                Ref: 'BastionLaunchTemplate',
+              },
+              Version: {
+                'Fn::GetAtt': ['BastionLaunchTemplate', 'LatestVersionNumber'],
+              },
             },
             VPCZoneIdentifier: [
               {
@@ -324,7 +341,7 @@ describe('bastion', () => {
   });
 
   describe('#buildBastion', () => {
-    it.skip('builds the complete bastion host', async () => {
+    it('builds the complete bastion host', async () => {
       const scope = nock('https://checkip.amazonaws.com').get('/').reply(200, '127.0.0.1');
 
       const expected = {
@@ -378,8 +395,13 @@ describe('bastion', () => {
             },
           },
           Properties: {
-            LaunchConfigurationName: {
-              Ref: 'BastionLaunchConfiguration',
+            LaunchTemplate: {
+              LaunchTemplateId: {
+                Ref: 'BastionLaunchTemplate',
+              },
+              Version: {
+                'Fn::GetAtt': ['BastionLaunchTemplate', 'LatestVersionNumber'],
+              },
             },
             VPCZoneIdentifier: [
               {
@@ -405,59 +427,71 @@ describe('bastion', () => {
             ],
           },
         },
-        BastionLaunchConfiguration: {
-          Type: 'AWS::AutoScaling::LaunchConfiguration',
+        BastionLaunchTemplate: {
+          Type: 'AWS::EC2::LaunchTemplate',
           Properties: {
-            AssociatePublicIpAddress: true,
-            BlockDeviceMappings: [
-              {
-                DeviceName: '/dev/xvda',
-                Ebs: {
-                  VolumeSize: 10,
-                  VolumeType: 'gp3',
-                  DeleteOnTermination: true,
+            LaunchTemplateName: {
+              // eslint-disable-next-line no-template-curly-in-string
+              'Fn::Sub': '${AWS::StackName}-bastion',
+            },
+            LaunchTemplateData: {
+              BlockDeviceMappings: [
+                {
+                  DeviceName: '/dev/xvda',
+                  Ebs: {
+                    VolumeSize: 10,
+                    VolumeType: 'gp3',
+                    DeleteOnTermination: true,
+                  },
+                },
+              ],
+              KeyName: 'MyKey',
+              ImageId: {
+                Ref: 'LatestAmiId',
+              },
+              IamInstanceProfile: {
+                Arn: {
+                  'Fn::GetAtt': ['BastionInstanceProfile', 'Arn'],
                 },
               },
-            ],
-            KeyName: 'MyKey',
-            ImageId: {
-              Ref: 'LatestAmiId',
-            },
-            InstanceMonitoring: false,
-            IamInstanceProfile: {
-              Ref: 'BastionInstanceProfile',
-            },
-            InstanceType: 't2.micro',
-            SecurityGroups: [
-              {
-                Ref: 'BastionSecurityGroup',
-              },
-            ],
-            SpotPrice: '0.0116',
-            UserData: {
-              'Fn::Base64': {
-                'Fn::Join': [
-                  '',
-                  [
-                    '#!/bin/bash -xe\n',
-                    '/usr/bin/yum update -y\n',
-                    '/usr/bin/yum install -y aws-cfn-bootstrap\n',
-                    'EIP_ALLOCATION_ID=',
-                    { 'Fn::GetAtt': ['BastionEIP', 'AllocationId'] },
-                    '\n',
-                    'INSTANCE_ID=`/usr/bin/curl -sq http://169.254.169.254/latest/meta-data/instance-id`\n',
-                    // eslint-disable-next-line no-template-curly-in-string
-                    '/usr/bin/aws ec2 associate-address --instance-id ${INSTANCE_ID} --allocation-id ${EIP_ALLOCATION_ID} --region ',
-                    { Ref: 'AWS::Region' },
-                    '\n',
-                    '/opt/aws/bin/cfn-signal --exit-code 0 --stack ',
-                    { Ref: 'AWS::StackName' },
-                    ' --resource BastionAutoScalingGroup ',
-                    ' --region ',
-                    { Ref: 'AWS::Region' },
-                    '\n',
+              InstanceType: 't2.micro',
+              NetworkInterfaces: [
+                {
+                  AssociatePublicIpAddress: true,
+                  DeviceIndex: 0,
+                  Groups: [
+                    {
+                      Ref: 'BastionSecurityGroup',
+                    },
                   ],
-                ],
+                  DeleteOnTermination: true,
+                },
+              ],
+              UserData: {
+                'Fn::Base64': {
+                  'Fn::Join': [
+                    '',
+                    [
+                      '#!/bin/bash -xe\n',
+                      '/usr/bin/yum update -y\n',
+                      '/usr/bin/yum install -y aws-cfn-bootstrap\n',
+                      'EIP_ALLOCATION_ID=',
+                      { 'Fn::GetAtt': ['BastionEIP', 'AllocationId'] },
+                      '\n',
+                      'INSTANCE_ID=`/usr/bin/curl -sq http://169.254.169.254/latest/meta-data/instance-id`\n',
+                      // eslint-disable-next-line no-template-curly-in-string
+                      '/usr/bin/aws ec2 associate-address --instance-id ${INSTANCE_ID} --allocation-id ${EIP_ALLOCATION_ID} --region ',
+                      { Ref: 'AWS::Region' },
+                      '\n',
+                      '/opt/aws/bin/cfn-signal --exit-code 0 --stack ',
+                      { Ref: 'AWS::StackName' },
+                      ' --resource BastionAutoScalingGroup ',
+                      ' --region ',
+                      { Ref: 'AWS::Region' },
+                      '\n',
+                    ],
+                  ],
+                },
               },
             },
           },
